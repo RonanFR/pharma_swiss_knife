@@ -19,14 +19,14 @@ if __name__ == '__main__':
         num_rows="dynamic",
     )
 
-    all_times = df["time"].values
-    training_times = df[df["used_for_fitting"]]["time"].values
-    validation_times = df[~df["used_for_fitting"]]["time"].values
+    all_times = edited_df["time"].values
+    training_times = edited_df[edited_df["used_for_fitting"]]["time"].values
+    validation_times = edited_df[~edited_df["used_for_fitting"]]["time"].values
     max_time = all_times.max() + 10
 
-    all_concentrations = df["concentration"].values
-    training_concentrations = df[df["used_for_fitting"]]["concentration"].values
-    validation_concentrations = df[~df["used_for_fitting"]]["concentration"].values
+    all_concentrations = edited_df["concentration"].values
+    training_concentrations = edited_df[edited_df["used_for_fitting"]]["concentration"].values
+    validation_concentrations = edited_df[~edited_df["used_for_fitting"]]["concentration"].values
 
 
     # Optimization
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     # -----------------------------------------------
 
     # Charts
-    fig = px.scatter(df, x="time", y="concentration", color="used_for_fitting")
+    fig = px.scatter(edited_df, x="time", y="concentration", color="used_for_fitting")
     fig.add_scatter(
         x=np.arange(0, max_time, 0.1), 
         y=double_exp_fun(params=result.x, times=np.arange(0, 160, 0.1)),
@@ -88,5 +88,8 @@ if __name__ == '__main__':
     )
     st.metric(
         "Average gap with data points not used for fitting", 
-        value=np.round(np.abs([np.abs(double_exp_fun(params=result.x, times=np.array(t)) - c) for t, c in zip(validation_times, validation_concentrations)]), 3)
-    )
+        value=np.round(
+            np.mean([np.abs(double_exp_fun(params=result.x, times=np.array(t)) - c) for t, c in zip(validation_times, validation_concentrations)])
+            if len(validation_times) > 0 else 0.,
+            3
+        ))
